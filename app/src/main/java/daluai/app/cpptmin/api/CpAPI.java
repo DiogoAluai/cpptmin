@@ -19,6 +19,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
+import daluai.app.cpptmin.dto.StationDto;
 import daluai.app.sdk_boost.wrapper.Logger;
 
 
@@ -49,6 +50,15 @@ public class CpAPI {
             // never happens, since it's not malformed, duh
             return null;
         }
+    }
+
+    public StationDto getStationDto(Station station) {
+        NextTrains nextTrains = getNextTrains(station);
+        if (nextTrains == null) {
+            LOG.w("Got null NextTrains");
+            nextTrains = new NextTrains();
+        }
+        return new StationDto(station.getDesignation(), nextTrains);
     }
 
     public List<Station> getStations() {

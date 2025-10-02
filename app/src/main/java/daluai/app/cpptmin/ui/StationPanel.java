@@ -11,16 +11,18 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import daluai.app.cpptmin.R;
-import daluai.app.cpptmin.api.Station;
+import daluai.app.cpptmin.api.Stop;
+import daluai.app.cpptmin.dto.StationDto;
 
-public class StationPanel extends ArrayAdapter<Station> {
+public class StationPanel extends ArrayAdapter<StationDto> {
 
     private final Context context;
 
-    public StationPanel(Context context, List<Station> stations) {
-        super(context, 0, stations);
+    public StationPanel(Context context, List<StationDto> stationDtos) {
+        super(context, 0, stationDtos);
         this.context = context;
     }
 
@@ -31,29 +33,37 @@ public class StationPanel extends ArrayAdapter<Station> {
             convertView = LayoutInflater.from(context).inflate(R.layout.item_station, parent, false);
         }
 
-        Station station = getItem(position);
-        if (station == null) return convertView;
+        StationDto stationDto = getItem(position);
+        if (stationDto == null) return convertView;
 
-        TextView stationName = convertView.findViewById(R.id.station_name);
-        TextView nextTrains = convertView.findViewById(R.id.next_trains);
+        TextView stationNameTextView = convertView.findViewById(R.id.station_name);
+        TextView nextTrainsTextView = convertView.findViewById(R.id.next_trains);
 
-        stationName.setText(station.getDesignation());
+        stationNameTextView.setText(stationDto.getDesignation());
 
         // Example: join upcoming trains as "HH:mm - Destination"
-        List<String> trains = List.of("asd","dsa", "and such");
-        if (trains != null && !trains.isEmpty()) {
-            nextTrains.setText(TextUtils.join("\n", trains));
+        List<String> incomingTrains = stationDto.getNextTrains().getStationStops().stream()
+                .map(stop -> renderStop(stop))
+                .limit(2)
+                .collect(Collectors.toList());
+        if (incomingTrains != null && !incomingTrains.isEmpty()) {
+            nextTrainsTextView.setText(TextUtils.join("\n", incomingTrains));
         } else {
-            nextTrains.setText("No upcoming trains");
+            nextTrainsTextView.setText("No upcoming trains");
         }
 
         return convertView;
         // todo: open modal with extra details
-//        convertView.setOnClickListener(view -> startMessageActivity(station));
+//        convertView.setOnClickListener(view -> startMessageActivity(nextTrains));
 
     }
+
+    @NonNull
+    private static String renderStop(Stop stop) {
+        return stop.getArrivalTime() + " " + stop.getTrainDestination().getDesignation();
+    }
 //
-//    private void startMessageActivity(Station station) {
+//    private void startMessageActivity(NextTrains station) {
 //        String username = station.getPropertyString(PROP_USER_ALIAS);
 //
 //        Intent intent = new Intent(context, MessageActivity.class);

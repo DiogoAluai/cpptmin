@@ -9,7 +9,7 @@
             android:id="@+id/station_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@android:color/black"
             android:paddingBottom="6dp"/>
@@ -18,8 +18,8 @@
             android:id="@+id/next_trains"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textColor="@android:color/darker_gray"
+            android:textSize="18sp"
+            android:textColor="#626262"
             android:lineSpacingExtra="2dp"/>
 
 </LinearLayout>
