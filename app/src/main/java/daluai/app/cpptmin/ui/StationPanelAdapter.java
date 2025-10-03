@@ -19,6 +19,8 @@ import daluai.app.cpptmin.dto.StationDto;
 
 public class StationPanelAdapter extends ArrayAdapter<StationDto> {
 
+    private static final int MAX_INCOMING_TRAINS_DISPLAYED = 4;
+
     private final Context context;
 
     public StationPanelAdapter(Context context, List<StationDto> stationDtos) {
@@ -43,10 +45,10 @@ public class StationPanelAdapter extends ArrayAdapter<StationDto> {
 
         // Example: join upcoming trains as "HH:mm - Destination"
         List<String> incomingTrains = stationDto.getNextTrains().getStationStops().stream()
-                .map(stop -> renderStop(stop))
-                .limit(2)
+                .map(StationPanelAdapter::renderStop)
+                .limit(MAX_INCOMING_TRAINS_DISPLAYED)
                 .collect(Collectors.toList());
-        if (incomingTrains != null && !incomingTrains.isEmpty()) {
+        if (!incomingTrains.isEmpty()) {
             nextTrainsTextView.setText(TextUtils.join("\n", incomingTrains));
         } else {
             nextTrainsTextView.setText("No upcoming trains");
