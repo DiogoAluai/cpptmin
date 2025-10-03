@@ -17,11 +17,11 @@ import daluai.app.cpptmin.R;
 import daluai.app.cpptmin.api.Stop;
 import daluai.app.cpptmin.dto.StationDto;
 
-public class StationPanel extends ArrayAdapter<StationDto> {
+public class StationPanelAdapter extends ArrayAdapter<StationDto> {
 
     private final Context context;
 
-    public StationPanel(Context context, List<StationDto> stationDtos) {
+    public StationPanelAdapter(Context context, List<StationDto> stationDtos) {
         super(context, 0, stationDtos);
         this.context = context;
     }

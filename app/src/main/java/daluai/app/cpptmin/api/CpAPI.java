@@ -25,6 +25,8 @@ import daluai.app.sdk_boost.wrapper.Logger;
 
 public class CpAPI {
 
+    public static final CpAPI INSTANCE = new CpAPI();
+
     private static final Logger LOG = Logger.ofClass(CpAPI.class);
 
     public static final String SERVICES_API_URL = "https://api-gateway.cp.pt/cp/services";
@@ -35,7 +37,7 @@ public class CpAPI {
 
     private final ObjectMapper objectMapper;
 
-    public CpAPI() {
+    private CpAPI() {
         this.objectMapper = new ObjectMapper();
         this.objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     }
