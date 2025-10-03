@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import daluai.app.cpptmin.api.CpAPI;
@@ -30,27 +31,46 @@ public class StationsViewModel extends ViewModel {
     private final CpAPI cpApi;
     private final ExecutorService apiThreadPool;
 
-    private List<StationDto> cache;
+    private final AtomicReference<List<StationDto>> cacheAtomicReference;
 
     public StationsViewModel() {
         this.cpApi = CpAPI.INSTANCE;
         this.apiThreadPool = Executors.newFixedThreadPool(MAX_N_THREADS);
-        this.cache = null;
+        this.cacheAtomicReference = new AtomicReference<>(null);
         LOG.i("Relying on hardcoded relevant designations: " + RELEVANT_DESIGNATIONS);
     }
 
     /**
-     * Wait for api and get all StationDtos
+     * Wait for api and get all StationDtos.
+     * Guaranteed same reference returned everytime.
      *
      * @return non-null stations
      */
     @NonNull
-    public List<StationDto> get() {
-        if (cache != null) {
-            return cache;
+    public synchronized List<StationDto> get() {
+        List<StationDto> cachedStations = cacheAtomicReference.get();
+        if (cachedStations != null) {
+            return cachedStations;
         }
-        cache = getNextTrains();
-        return cache;
+        var stations = getNextTrains();
+        cacheAtomicReference.set(stations);
+        return stations;
+    }
+
+    public synchronized void refreshData() {
+        var cachedStations = safeCacheValue();
+        List<StationDto> nextTrains = getNextTrains();
+        cachedStations.clear();
+        cachedStations.addAll(nextTrains);
+    }
+
+    public synchronized void clearData() {
+        safeCacheValue().clear();
+    }
+
+    private List<StationDto> safeCacheValue() {
+        var cachedStations = cacheAtomicReference.get();
+        return cachedStations != null ? cachedStations : new ArrayList<>();
     }
 
     /**
@@ -93,5 +113,4 @@ public class StationsViewModel extends ViewModel {
                 .filter(s -> RELEVANT_DESIGNATIONS.contains(s.getDesignation()))
                 .collect(Collectors.toList());
     }
-
 }

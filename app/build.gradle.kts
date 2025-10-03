@@ -38,6 +38,7 @@ dependencies {
     implementation(libs.material)
     implementation("daluai.lib:sdk-boost:1.4.1")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.20.0")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
