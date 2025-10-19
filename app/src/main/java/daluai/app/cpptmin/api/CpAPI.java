@@ -85,6 +85,9 @@ public class CpAPI {
     }
 
     private <T> T parseResponse(String json, TypeReference<T> type) {
+        if (json == null) {
+            return null;
+        }
         try {
             return objectMapper.readValue(json, type);
         } catch (JsonProcessingException e) {

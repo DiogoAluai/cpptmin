@@ -14,13 +14,14 @@ import androidx.lifecycle.MutableLiveData;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import daluai.app.cpptmin.api.CpAPI;
@@ -107,24 +108,43 @@ public class StationsViewModel extends AndroidViewModel {
     private void locationAwareSort(List<StationDto> nextTrains) {
         Location loc = getLocation();
         if (loc == null) {
+            LOG.w("Got null location");
             return;
         }
-        Function<StationDto, Double> calculateDistance = stationDto -> {
-            var station = stationDto.getStation();
+        var distMap = createStationToDistanceMap(nextTrains, loc);
+        nextTrains.sort(Comparator.comparing(nt -> distMap.get(nt.getStation())));
+    }
+
+    /**
+     * Calculate stationCode to distance map.
+     * Non null distances.
+     */
+    private static Map<Station, Double> createStationToDistanceMap(List<StationDto> nextTrains, Location loc) {
+        var distMap = new HashMap<Station, Double>();
+        for (var nt : nextTrains) {
+            var station = nt.getStation();
+            double distance;
             if (station.getLatitude() == null || station.getLongitude() == null) {
                 LOG.e("Station location is null!");
-                return Double.MAX_VALUE;
+                distance = Double.MAX_VALUE;
             }
-            return Math.abs(station.getLatitude() - loc.getLatitude()) + (station.getLongitude() - loc.getLongitude());
-        };
-        nextTrains.sort(Comparator.comparing(calculateDistance).reversed());
+            else {
+                distance = Math.abs(station.getLatitude() - loc.getLatitude())
+                    + Math.abs(station.getLongitude() - loc.getLongitude());}
+            distMap.put(station, distance);
+        }
+        return distMap;
     }
 
     @SuppressLint("MissingPermission")
     private Location getLocation() {
         try {
             var locationManager = (LocationManager) getApplication().getSystemService(Context.LOCATION_SERVICE);
-            return locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            var gpsLoc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (gpsLoc != null) {
+                return gpsLoc;
+            }
+            return locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         } catch (Exception e) {
             LOG.e("Could not get location", e);
             return null;
