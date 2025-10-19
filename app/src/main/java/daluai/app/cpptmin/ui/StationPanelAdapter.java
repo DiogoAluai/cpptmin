@@ -1,7 +1,14 @@
 package daluai.app.cpptmin.ui;
 
+import static java.util.Objects.requireNonNull;
+
 import android.content.Context;
-import android.text.TextUtils;
+import android.graphics.Color;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StrikethroughSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,15 +18,16 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import daluai.app.cpptmin.R;
 import daluai.app.cpptmin.api.Stop;
+import daluai.app.cpptmin.api.Suppression;
 import daluai.app.cpptmin.dto.StationDto;
 
 public class StationPanelAdapter extends ArrayAdapter<StationDto> {
 
     private static final int MAX_INCOMING_TRAINS_DISPLAYED = 10;
+    private static final int NICER_YELLOW = Color.parseColor("#DAA520");
 
     private final Context context;
 
@@ -43,34 +51,72 @@ public class StationPanelAdapter extends ArrayAdapter<StationDto> {
 
         stationNameTextView.setText(stationDto.getStation().getDesignation());
 
-        // Example: join upcoming trains as "HH:mm - Destination"
-        List<String> incomingTrains = stationDto.getNextTrains().getStationStops().stream()
-                .map(StationPanelAdapter::renderStop)
-                .limit(MAX_INCOMING_TRAINS_DISPLAYED)
-                .collect(Collectors.toList());
-        if (!incomingTrains.isEmpty()) {
-            nextTrainsTextView.setText(TextUtils.join("\n", incomingTrains));
-        } else {
+        List<Stop> stops = stationDto.getNextTrains().getStationStops();
+
+        if (stops == null || stops.isEmpty()) {
             nextTrainsTextView.setText("No upcoming trains");
+        } else {
+            nextTrainsTextView.setText(renderStops(stops));
         }
 
         return convertView;
-        // todo: open modal with extra details
-//        convertView.setOnClickListener(view -> startMessageActivity(nextTrains));
 
+    }
+
+    private CharSequence renderStops(List<Stop> stops) {
+        SpannableStringBuilder builder = new SpannableStringBuilder();
+
+        for (int i = 0; i < Math.min(stops.size(), MAX_INCOMING_TRAINS_DISPLAYED); i++) {
+            Stop stop = stops.get(i);
+            builder.append(renderStop(stop));
+            if (i < stops.size() - 1) {
+                builder.append("\n");
+            }
+        }
+        return builder;
     }
 
     @NonNull
-    private static String renderStop(Stop stop) {
-        return stop.getArrivalTime() + " " + stop.getTrainDestination().getDesignation();
+    private static CharSequence renderStop(Stop stop) {
+        if (stop.getSuppression() != null) {
+            return renderSuppression(stop);
+        }
+        if (stop.getDelay() != null && stop.getDelay() != 0) {
+            return renderDelay(stop);
+        }
+        return renderTimeAndDestination(stop);
     }
-//
-//    private void startMessageActivity(NextTrains station) {
-//        String username = station.getPropertyString(PROP_USER_ALIAS);
-//
-//        Intent intent = new Intent(context, MessageActivity.class);
-//        intent.putExtra(INTENT_MESSAGE_STATION_IP, station.getInet4Addresses()[0].getHostAddress());
-//        intent.putExtra(INTENT_MESSAGE_USER, username);
-//        context.startActivity(intent);
-//    }
+
+    private static CharSequence renderSuppression(Stop stop) {
+        requireNonNull(stop.getSuppression());
+
+        CharSequence timeAndDestination = renderTimeAndDestination(stop);
+        String text = timeAndDestination + "  " + "Suppressed";
+
+        var span = new SpannableString(text);
+        span.setSpan(new StrikethroughSpan(), 0, timeAndDestination.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        span.setSpan(new ForegroundColorSpan(Color.RED), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        return span;
+    }
+
+
+    private static CharSequence renderDelay(Stop stop) {
+        requireNonNull(stop.getDelay());
+
+        int delay = stop.getDelay();
+        CharSequence timeAndDestination = renderTimeAndDestination(stop);
+        String minString = delay == 1 ? "min" : "mins";
+        String text = timeAndDestination + "  " + delay + " " + minString + " delayed";
+
+        var span = new SpannableString(text);
+        span.setSpan(new ForegroundColorSpan(NICER_YELLOW), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        return span;
+    }
+
+    @NonNull
+    private static CharSequence renderTimeAndDestination(Stop stop) {
+        return stop.getDepartureTime() + " " + stop.getTrainDestination().getDesignation();
+    }
 }
