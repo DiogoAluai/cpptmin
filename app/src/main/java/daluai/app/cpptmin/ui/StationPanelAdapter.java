@@ -19,7 +19,7 @@ import daluai.app.cpptmin.dto.StationDto;
 
 public class StationPanelAdapter extends ArrayAdapter<StationDto> {
 
-    private static final int MAX_INCOMING_TRAINS_DISPLAYED = 4;
+    private static final int MAX_INCOMING_TRAINS_DISPLAYED = 10;
 
     private final Context context;
 
