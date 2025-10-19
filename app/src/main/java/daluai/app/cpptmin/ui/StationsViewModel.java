@@ -1,6 +1,10 @@
 package daluai.app.cpptmin.ui;
 
+import static daluai.app.sdk_boost.wrapper.UiUtils.runCallbackOnMainThread;
+
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import java.util.ArrayList;
@@ -11,7 +15,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import daluai.app.cpptmin.api.CpAPI;
@@ -19,6 +22,9 @@ import daluai.app.cpptmin.api.Station;
 import daluai.app.cpptmin.dto.StationDto;
 import daluai.app.sdk_boost.wrapper.Logger;
 
+/**
+ * View model for stations. Call {@link StationsViewModel#refetchData()} to load or reload data.
+ */
 public class StationsViewModel extends ViewModel {
 
     private static final Logger LOG = Logger.ofClass(StationsViewModel.class);
@@ -31,53 +37,45 @@ public class StationsViewModel extends ViewModel {
     private final CpAPI cpApi;
     private final ExecutorService apiThreadPool;
 
-    private final AtomicReference<List<StationDto>> cacheAtomicReference;
+    private final MutableLiveData<List<StationDto>> stationsLiveData;
 
     public StationsViewModel() {
         this.cpApi = CpAPI.INSTANCE;
         this.apiThreadPool = Executors.newFixedThreadPool(MAX_N_THREADS);
-        this.cacheAtomicReference = new AtomicReference<>(null);
+        this.stationsLiveData = new MutableLiveData<>(new ArrayList<>());
+        Executors.newSingleThreadExecutor().execute(this::refetchData);
         LOG.i("Relying on hardcoded relevant designations: " + RELEVANT_DESIGNATIONS);
     }
 
     /**
-     * Wait for api and get all StationDtos.
+     * Wait for api and getLive all StationDtos.
      * Guaranteed same reference returned everytime.
      *
      * @return non-null stations
      */
     @NonNull
-    public synchronized List<StationDto> get() {
-        List<StationDto> cachedStations = cacheAtomicReference.get();
-        if (cachedStations != null) {
-            return cachedStations;
-        }
-        var stations = getNextTrains();
-        cacheAtomicReference.set(stations);
-        return stations;
+    public synchronized LiveData<List<StationDto>> getLive() {
+        return stationsLiveData;
     }
 
-    public synchronized void refreshData() {
-        var cachedStations = safeCacheValue();
-        List<StationDto> nextTrains = getNextTrains();
-        cachedStations.clear();
-        cachedStations.addAll(nextTrains);
-    }
-
-    public synchronized void clearData() {
-        safeCacheValue().clear();
-    }
-
-    private List<StationDto> safeCacheValue() {
-        var cachedStations = cacheAtomicReference.get();
-        return cachedStations != null ? cachedStations : new ArrayList<>();
+    /**
+     * Fetch and replace data through a network call. Cannot be called by main thread.
+     */
+    public synchronized void refetchData() {
+        runCallbackOnMainThread(() -> {
+            stationsLiveData.setValue(new ArrayList<>()); // clear while fetching new data
+        });
+        List<StationDto> nextTrains = fetchNextTrains();
+        runCallbackOnMainThread(() -> {
+            stationsLiveData.setValue(nextTrains);
+        });
     }
 
     /**
      * API calls to CP to populate every row with information
      * Improvements can most likely be done.
      */
-    private List<StationDto> getNextTrains() {
+    private List<StationDto> fetchNextTrains() {
         var relevantStations = getRelevantStations();
 
         try {
