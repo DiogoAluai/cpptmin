@@ -21,12 +21,11 @@ import java.util.List;
 
 import daluai.app.cpptmin.R;
 import daluai.app.cpptmin.api.Stop;
-import daluai.app.cpptmin.api.Suppression;
 import daluai.app.cpptmin.dto.StationDto;
 
 public class StationPanelAdapter extends ArrayAdapter<StationDto> {
 
-    private static final int MAX_INCOMING_TRAINS_DISPLAYED = 10;
+    private static final int MAX_INCOMING_TRAINS_DISPLAYED = 100;
     private static final int NICER_YELLOW = Color.parseColor("#DAA520");
 
     private final Context context;

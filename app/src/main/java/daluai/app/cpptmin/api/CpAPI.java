@@ -27,6 +27,11 @@ public class CpAPI {
 
     public static final CpAPI INSTANCE = new CpAPI();
 
+    // -- AUTH
+    private static final String CONNECT_SECRET = "74bd06d5a2715c64c2f848c5cdb56e6b";
+    private static final String CONNECT_ID = "1483ea620b920be6328dcf89e808937a";
+    // -------
+
     private static final Logger LOG = Logger.ofClass(CpAPI.class);
 
     public static final String SERVICES_API_URL = "https://api-gateway.cp.pt/cp/services";
@@ -76,9 +81,19 @@ public class CpAPI {
                 .orElse(null);
     }
 
+    /**
+     * Get today's and tomorrow next trains.
+     */
     public NextTrains getNextTrains(String stationCode) {
-        String date = LocalDate.now().toString();
-        String time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+        LocalDate todayDate = LocalDate.now();
+        LocalDate tomorrowDate = todayDate.plusDays(1);
+        NextTrains nextTrains = getNextTrains(stationCode, todayDate, LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
+        NextTrains tomorrowNextTrains = getNextTrains(stationCode, tomorrowDate, "00:00");
+        nextTrains.getStationStops().addAll(tomorrowNextTrains.getStationStops());
+        return nextTrains;
+    }
+
+    private NextTrains getNextTrains(String stationCode, LocalDate date, String time) {
         String urlString = TRAVEL_API_URL + String.format("/stations/%s/timetable/%s?start=%s", stationCode, date, time);
         String jsonResponse = get(sushCreateUrl(urlString));
         return parseResponse(jsonResponse, new TypeReference<>() {});
@@ -119,8 +134,8 @@ public class CpAPI {
         conn.setConnectTimeout(TIMEOUT);
         conn.setReadTimeout(TIMEOUT);
         // tokens seem to be hardcoded
-        conn.setRequestProperty("x-cp-connect-secret", "74bd06d5a2715c64c2f848c5cdb56e6b");
-        conn.setRequestProperty("x-cp-connect-id", "1483ea620b920be6328dcf89e808937a");
+        conn.setRequestProperty("x-cp-connect-secret", CONNECT_SECRET);
+        conn.setRequestProperty("x-cp-connect-id", CONNECT_ID);
         conn.setRequestProperty("X-Api-Key", "DUMMY");
     }
 

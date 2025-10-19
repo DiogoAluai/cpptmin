@@ -5,17 +5,14 @@ import java.util.List;
 
 public class NextTrains {
 
-    private List<Stop> stationStops;
+    private final List<Stop> stationStops;
 
     public NextTrains() {
+        // also needed for deserialization
         this.stationStops = new ArrayList<>();
     }
 
     public List<Stop> getStationStops() {
         return stationStops;
-    }
-
-    public void setStationStops(List<Stop> stationStops) {
-        this.stationStops = stationStops;
     }
 }

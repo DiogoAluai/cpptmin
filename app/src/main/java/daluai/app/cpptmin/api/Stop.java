@@ -12,10 +12,7 @@ public class Stop {
     private Integer delay; // minutes
 
     public Stop() {
-    }
-
-    public boolean isSuppressed() {
-        return suppression != null;
+        // keep me
     }
 
     public String getArrivalTime() {
