@@ -1,7 +1,5 @@
 package daluai.app.cpptmin.ui;
 
-import static daluai.app.sdk_boost.wrapper.UiUtils.runCallbackOnMainThread;
-
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -62,13 +60,9 @@ public class StationsViewModel extends ViewModel {
      * Fetch and replace data through a network call. Cannot be called by main thread.
      */
     public synchronized void refetchData() {
-        runCallbackOnMainThread(() -> {
-            stationsLiveData.setValue(new ArrayList<>()); // clear while fetching new data
-        });
+        stationsLiveData.postValue(new ArrayList<>()); // clear while fetching new data
         List<StationDto> nextTrains = fetchNextTrains();
-        runCallbackOnMainThread(() -> {
-            stationsLiveData.setValue(nextTrains);
-        });
+        stationsLiveData.postValue(nextTrains);
     }
 
     /**
