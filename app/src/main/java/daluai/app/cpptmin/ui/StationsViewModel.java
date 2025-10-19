@@ -1,18 +1,26 @@
 package daluai.app.cpptmin.ui;
 
+import android.annotation.SuppressLint;
+import android.app.Application;
+import android.content.Context;
+import android.location.Location;
+import android.location.LocationManager;
+
 import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import daluai.app.cpptmin.api.CpAPI;
@@ -21,9 +29,9 @@ import daluai.app.cpptmin.dto.StationDto;
 import daluai.app.sdk_boost.wrapper.Logger;
 
 /**
- * View model for stations. Call {@link StationsViewModel#refetchData()} to load or reload data.
+ * View model for stations, sorted by nearest first. Call {@link StationsViewModel#refetchData()} to load or reload data.
  */
-public class StationsViewModel extends ViewModel {
+public class StationsViewModel extends AndroidViewModel {
 
     private static final Logger LOG = Logger.ofClass(StationsViewModel.class);
 
@@ -37,7 +45,8 @@ public class StationsViewModel extends ViewModel {
 
     private final MutableLiveData<List<StationDto>> stationsLiveData;
 
-    public StationsViewModel() {
+    public StationsViewModel(Application application) {
+        super(application);
         this.cpApi = CpAPI.INSTANCE;
         this.apiThreadPool = Executors.newFixedThreadPool(MAX_N_THREADS);
         this.stationsLiveData = new MutableLiveData<>(new ArrayList<>());
@@ -62,6 +71,7 @@ public class StationsViewModel extends ViewModel {
     public synchronized void refetchData() {
         stationsLiveData.postValue(new ArrayList<>()); // clear while fetching new data
         List<StationDto> nextTrains = fetchNextTrains();
+        locationAwareSort(nextTrains);
         stationsLiveData.postValue(nextTrains);
     }
 
@@ -91,6 +101,33 @@ public class StationsViewModel extends ViewModel {
         } catch (InterruptedException | ExecutionException e) {
             LOG.e("Exception during api calls", e);
             return Collections.emptyList();
+        }
+    }
+
+    private void locationAwareSort(List<StationDto> nextTrains) {
+        Location loc = getLocation();
+        if (loc == null) {
+            return;
+        }
+        Function<StationDto, Double> calculateDistance = stationDto -> {
+            var station = stationDto.getStation();
+            if (station.getLatitude() == null || station.getLongitude() == null) {
+                LOG.e("Station location is null!");
+                return Double.MAX_VALUE;
+            }
+            return Math.abs(station.getLatitude() - loc.getLatitude()) + (station.getLongitude() - loc.getLongitude());
+        };
+        nextTrains.sort(Comparator.comparing(calculateDistance).reversed());
+    }
+
+    @SuppressLint("MissingPermission")
+    private Location getLocation() {
+        try {
+            var locationManager = (LocationManager) getApplication().getSystemService(Context.LOCATION_SERVICE);
+            return locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        } catch (Exception e) {
+            LOG.e("Could not get location", e);
+            return null;
         }
     }
 

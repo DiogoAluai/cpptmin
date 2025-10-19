@@ -55,12 +55,12 @@ public class CpAPI {
     }
 
     public StationDto getStationDto(Station station) {
-        NextTrains nextTrains = getNextTrains(station);
+        NextTrains nextTrains = getNextTrains(station.getCode());
         if (nextTrains == null) {
             LOG.w("Got null NextTrains");
             nextTrains = new NextTrains();
         }
-        return new StationDto(station.getDesignation(), nextTrains);
+        return new StationDto(station, nextTrains);
     }
 
     public List<Station> getStations() {
@@ -69,10 +69,17 @@ public class CpAPI {
         return stations != null ? stations : Collections.emptyList();
     }
 
-    public NextTrains getNextTrains(Station station) {
+    public Station getStation(String stationCode) {
+        return getStations().stream()
+                .filter(station -> stationCode.equals(station.getCode()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public NextTrains getNextTrains(String stationCode) {
         String date = LocalDate.now().toString();
         String time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
-        String urlString = TRAVEL_API_URL + String.format("/stations/%s/timetable/%s?start=%s", station.getCode(), date, time);
+        String urlString = TRAVEL_API_URL + String.format("/stations/%s/timetable/%s?start=%s", stationCode, date, time);
         String jsonResponse = get(sushCreateUrl(urlString));
         return parseResponse(jsonResponse, new TypeReference<>() {});
     }

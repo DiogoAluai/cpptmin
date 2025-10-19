@@ -41,7 +41,7 @@ public class StationPanelAdapter extends ArrayAdapter<StationDto> {
         TextView stationNameTextView = convertView.findViewById(R.id.station_name);
         TextView nextTrainsTextView = convertView.findViewById(R.id.next_trains);
 
-        stationNameTextView.setText(stationDto.getDesignation());
+        stationNameTextView.setText(stationDto.getStation().getDesignation());
 
         // Example: join upcoming trains as "HH:mm - Destination"
         List<String> incomingTrains = stationDto.getNextTrains().getStationStops().stream()

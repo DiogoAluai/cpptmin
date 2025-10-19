@@ -1,19 +1,20 @@
 package daluai.app.cpptmin.dto;
 
 import daluai.app.cpptmin.api.NextTrains;
+import daluai.app.cpptmin.api.Station;
 
 public class StationDto {
 
-    private final String designation;
+    private final Station station;
     private final NextTrains nextTrains;
 
-    public StationDto(String designation, NextTrains nextTrains) {
-        this.designation = designation;
+    public StationDto(Station station, NextTrains nextTrains) {
+        this.station = station;
         this.nextTrains = nextTrains;
     }
 
-    public String getDesignation() {
-        return designation;
+    public Station getStation() {
+        return station;
     }
 
     public NextTrains getNextTrains() {

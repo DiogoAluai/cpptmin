@@ -15,9 +15,24 @@ public class CpAPITest extends TestCase {
         assertFalse(stations.isEmpty());
     }
 
+    public void testStation() {
+        Station station = api.getStation("94-39172");
+        assertNotNull(station);
+        assertNotNull(station.getLatitude());
+        assertNotNull(station.getLongitude());
+        assertEquals("94-39172", station.getCode());
+        assertEquals("General Torres", station.getDesignation());
+    }
+
     public void testNextTrains() {
-        var nextTrains = api.getNextTrains(new Station("94-39172", "Real code"));
+        var nextTrains = api.getNextTrains("94-39172");
         assertNotNull(nextTrains);
         assertFalse(nextTrains.getStationStops().isEmpty());
+        Stop stop = nextTrains.getStationStops().get(0);
+        assertNotNull(stop.getArrivalTime());
+        assertNotNull(stop.getDepartureTime());
+        assertNotNull(stop.getTrainOrigin());
+        assertNotNull(stop.getTrainDestination());
+
     }
 }

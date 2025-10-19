@@ -1,6 +1,8 @@
 package daluai.app.cpptmin.ui;
 
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,6 +25,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final Logger LOG = Logger.ofClass(MainActivity.class);
 
+    private static final int REQ_LOCATION = 1002;
+
     // UI components
     private final ToastHandler toastHandler;
     private final LazyView<ListView> listView;
@@ -39,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        askCoarseLocationPermissionOrFail();
+        
         setSupportActionBar(toolbar.get());
 
         var stationsViewModel = new ViewModelProvider(this).get(StationsViewModel.class);
@@ -53,6 +60,12 @@ public class MainActivity extends AppCompatActivity {
         });
 
         listView.get().setAdapter(adapter);
+    }
+
+    private void askCoarseLocationPermissionOrFail() {
+        if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, REQ_LOCATION);
+        }
     }
 
     @Override
