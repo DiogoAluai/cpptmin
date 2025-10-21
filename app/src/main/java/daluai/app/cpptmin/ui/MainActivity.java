@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
 
+import java.util.ArrayList;
 import java.util.concurrent.Executors;
 
 import daluai.app.cpptmin.R;
@@ -51,11 +52,11 @@ public class MainActivity extends AppCompatActivity {
         var stationsViewModel = new ViewModelProvider(this).get(StationsViewModel.class);
         var stationsLiveData = stationsViewModel.getLive();
 
-        var adapter = new StationPanelAdapter(this, stationsLiveData.getValue());
+        var adapter = new StationPanelAdapter(this, new ArrayList<>(stationsLiveData.getValue()));
 
         stationsLiveData.observe(this, stationDtos -> {
             adapter.clear();
-            adapter.addAll(stationDtos);
+            adapter.addAll(new ArrayList<>(stationDtos)); // clone so that we keep separate list references,and don't end up clearing the view model data
             adapter.notifyDataSetChanged();
         });
 
