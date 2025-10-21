@@ -75,7 +75,6 @@ public class StationPanelAdapter extends ArrayAdapter<StationDto> {
         return builder;
     }
 
-    @NonNull
     private static CharSequence renderStop(Stop stop) {
         if (stop.getSuppression() != null) {
             return renderSuppression(stop);
@@ -114,7 +113,6 @@ public class StationPanelAdapter extends ArrayAdapter<StationDto> {
         return span;
     }
 
-    @NonNull
     private static CharSequence renderTimeAndDestination(Stop stop) {
         return stop.getDepartureTime() + " " + stop.getTrainDestination().getDesignation();
     }

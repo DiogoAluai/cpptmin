@@ -38,7 +38,7 @@ public class StationsViewModel extends AndroidViewModel {
 
     // Hardcoded ones I care about
     // todo: add database if needed
-    private static final List<String> RELEVANT_DESIGNATIONS = List.of("Espinho", "Granja", "General Torres");
+    private static final List<String> RELEVANT_DESIGNATIONS = List.of("Espinho", "Granja", "General Torres", "Paramos");
     private static final int MAX_N_THREADS = 5;
 
     private final CpAPI cpApi;
